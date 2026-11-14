@@ -33,7 +33,7 @@ Set `VITE_API_URL` at build time. The app then calls:
 - `POST /api/review` with `{ content, meta, image, profile }` and expects `{ findings: Finding[] }`
 - `POST /api/rewrite` with `{ content, meta, profile, dismissed }` and expects `{ text, applied, skipped }`
 
-The finding shape is documented at the top of `src/engine/checker.js`. If the API is unset or unreachable, the app uses the built-in rules engine so the workflow keeps working.
+The full request and response contract, finding shape, brand profile and suggested database tables are in `BACKEND_CONTRACT.md`. If the API is unset or unreachable, the app uses the built-in rules engine so the workflow keeps working.
 
 ## Data
 
