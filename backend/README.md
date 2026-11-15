@@ -1,68 +1,44 @@
 # Backend (Flask)
 
-API for the Brand Consistency and Governance Platform. Rule-based checks are always on; Gemini is an optional layer on top.
+API for the Brand Consistency and Governance Platform. A deterministic rule engine always runs; Gemini is an optional layer on top. The server ships with **no brands, products, people or submissions**: an Owner creates everything (or loads the clearly labelled sample brand).
 
 ## Run
-
 ```bash
 cd backend
-python -m venv .venv && source .venv/bin/activate
+python3 -m venv .venv && . .venv/bin/activate
 pip install -r requirements.txt
-cp .env.example .env          # edit ALLOWED_ORIGINS, optional GEMINI_API_KEY
-python wsgi.py                # http://localhost:5000  (first run creates and seeds brandgov.db)
-pytest -q                     # 40 tests
+cp .env.example .env          # optional
+python3 wsgi.py               # http://localhost:5000
+python3 -m pytest -q          # tests
 ```
 
-Frontend: `cd frontend && VITE_API_URL=http://localhost:5000 npm run dev`. The header pill shows **API connected** when the server is in use and **Local rules engine** when the browser fell back.
+## Model
+- **Brands** (independent, versioned) → **Products** (fact sheet per product, versioned). Every save writes a new version; saving with a stale `version` returns 409.
+- Profile items (claims, restricted claims, terminology, specs, colours) have `status: approved|draft`. Only approved items are used as facts. Assistant output is always `draft`.
+- A review/submission is bound to `brandId` + `productId` (or `productId: null` for brand-level content). The server builds the context from that one brand/product only; a product of another brand returns 404. Submissions record the brand/product versions used.
 
-## Endpoints
-
-| Method | Path | Who | Purpose |
+## Roles (enforced on the server)
+| Capability | Creator | Reviewer | Owner |
 |---|---|---|---|
-| GET | `/api/health` | anyone | status, store, auth mode, AI on/off |
-| GET | `/api/bootstrap` | any role | profile, changelog, all submissions, current user |
-| POST | `/api/review` | any role | `{content, meta, image}` → `{findings}` (rules, plus AI if enabled) |
-| POST | `/api/rewrite` | any role | `{content, meta, dismissed}` → `{text, applied, skipped}` |
-| GET / PUT | `/api/profile` | read: any, write: **manager** | brand profile, versioned, validated |
-| GET / POST | `/api/submissions` | read: any, create: creator, manager | create runs the checks again on the server |
-| GET | `/api/submissions/<id>` | any | one submission |
-| POST | `/api/submissions/<id>/versions` | author or manager | resubmit after changes |
-| POST | `/api/submissions/<id>/decision` | **reviewer, manager** | `{status, comment, acknowledged}` |
-| POST | `/api/submissions/<id>/comments` | any | add comment |
-| POST | `/api/submissions/<id>/recheck` | reviewer, manager | re-run against the latest profile, keep earlier decisions |
-| POST | `/api/reset` | manager | restore sample data (`ALLOW_RESET=1`) |
+| Review a draft, submit own content | yes | review only (cannot submit) | yes |
+| View brand profiles | yes | yes | yes |
+| Suggest a profile change | yes | yes | – |
+| Create/edit brands and products, uploads, assistant, resolve suggestions | – | – | yes |
+| Approve/reject submissions | – | yes | yes (not own) |
+| Insights | – | yes | yes |
 
-## Rules the server enforces (the browser cannot skip them)
+Identity in `AUTH_MODE=demo` is a **prototype identity** sent in `X-User-Id/Role/Name/Designation` headers by the onboarding screen. Anyone can set these headers, so it is not security. `AUTH_MODE=jwt` verifies a Supabase Auth token and reads the role from `app_metadata.brand_role`.
 
-- Findings are re-run on the server against the **stored** profile on every submit; a request cannot supply its own rules.
-- A mandatory finding must be fixed, or rejected with a written reason, before submit. Conflicts and uncertain items are routed to the reviewer.
-- Reviewers do not submit; nobody decides their own submission; "changes requested" and "rejected" need a comment.
-- Approving with open or overridden mandatory findings needs `acknowledged: true`.
-- Only a manager changes the brand profile; every save is a new version with a changelog entry.
+## Endpoints (all `/api`)
+`GET /health` · `GET /bootstrap` · `GET|POST /brands` · `GET|PUT /brands/<id>` · `GET /brands/<id>/versions` · `POST /brands/<id>/products` · `PUT /brands/<id>/products/<pid>` · `GET /brands/<id>/products/<pid>/versions` · `POST /assets` · `GET /assets/<id>` · `GET /assistant/questions` · `POST /assistant/factsheet` · `GET|POST /suggestions` · `POST /suggestions/<id>/resolve` · `POST /review` · `POST /rewrite` · `GET|POST /submissions` · `GET /submissions/<id>` · `POST /submissions/<id>/versions|decision|comments|recheck` · `GET /insights` · `POST /demo/load`
+
+Review body: `{brandId, productId|null, content, meta:{type,audience,purpose}, image?}`. `productId` must be present (null = “Brand-level content / no product”). Findings carry `quote, label, category, severity (critical|warning|suggestion), strictness, suggestion, why, source, occurrences, ranges, needsHuman`. Repeated issues are merged; punctuation-only findings are never produced. Claims or figures the profile cannot verify are flagged for a person, with no invented source.
 
 ## Gemini (optional)
-
-Set `GEMINI_API_KEY`. The key stays on the server. Only the draft, audience, voice and approved claims are sent. The model can only add **flexible** findings; every quote must appear in the draft, and a source that is not in the profile is downgraded to "needs a person". Rewrites are polished only if they add no numbers and no new mandatory violations. Any failure falls back to the rule engine.
-
-## Auth
-
-`AUTH_MODE=demo` trusts `X-User-Role` / `X-User-Name` headers (the UI role switcher). That is for the demo only: anyone can claim to be a manager.
-`AUTH_MODE=jwt` requires a Supabase access token and reads the role from `app_metadata.brand_role`. The frontend has no sign-in screen yet.
+Set `GEMINI_API_KEY`. The key is read only on the server. The model gets just the selected approved context and the draft, must return schema-validated JSON, can only add non-mandatory findings, must quote the draft verbatim and cite a real approved item to count as verified; rewrites are rejected if they add numbers or new violations. On any failure the rule engine result stands. **Request handling is tested with mocked HTTP only; it has not been run against the live Gemini API.**
 
 ## Storage
+`STORE=sqlite` (default) or `STORE=supabase`. Supabase uses one table, `bg_docs` (`schema/supabase.sql`), through PostgREST with the service key, which must stay on the server. RLS is enabled with no policies, so the public keys cannot read it.
 
-`STORE=sqlite` (default) or `STORE=supabase` with `SUPABASE_URL` and `SUPABASE_SERVICE_KEY` after running `schema/supabase.sql`.
-
-## Not yet verified live
-
-- Gemini and Supabase code paths are tested with mocked HTTP only, not against the real services.
-- Render's free tier loses the SQLite file on redeploy; use Supabase for anything you want to keep.
-
-## Layout
-
-`app/engine/checker.py` rules engine (exact port of the frontend engine, verified against exported JS output) · `app/services/` workflow and profile · `app/ai/gemini.py` · `app/store/` · `app/routes.py` · `tests/`.
-
-## Deploy
-
-Backend (Render): root `backend`, build `pip install -r requirements.txt`, start `gunicorn wsgi:app --bind 0.0.0.0:$PORT --workers 1 --threads 4`, set `ALLOWED_ORIGINS` to the frontend URL. Keep one worker with SQLite.
-Frontend (Vercel): root `frontend`, build `node build.mjs`, output `dist`, env `VITE_API_URL=https://<your-backend>`.
+## Known limits
+Uploaded PDFs/documents are stored but their text is not extracted (paste text into the assistant instead). `GET /assets/<id>` is unauthenticated and relies on unguessable ids. Findings that need pixel analysis (palette/contrast) are computed in the browser and kept on submit.

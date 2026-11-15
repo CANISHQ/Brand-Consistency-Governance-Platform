@@ -1,20 +1,13 @@
 -- Run once in the Supabase SQL editor. The API uses the service key, so Row Level Security is enabled with no
--- public policies: the tables cannot be read or written with the anon key.
-create table if not exists bg_profiles (
-  version int primary key,
+-- public policies: the table cannot be read or written with the anon key.
+create table if not exists bg_docs (
+  kind text not null,
+  id text not null,
   data jsonb not null,
-  created_by text,
-  summary text,
-  created_at timestamptz default now()
+  created_at timestamptz default now(),
+  updated_at timestamptz default now(),
+  primary key (kind, id)
 );
-create table if not exists bg_submissions (
-  id text primary key,
-  seq int not null,
-  status text not null check (status in ('in_review','changes_requested','approved','rejected')),
-  data jsonb not null,           -- submission document: versions, findings, comments, activity
-  updated_at timestamptz default now()
-);
-create index if not exists bg_submissions_status on bg_submissions(status);
-create index if not exists bg_submissions_seq on bg_submissions(seq desc);
-alter table bg_profiles enable row level security;
-alter table bg_submissions enable row level security;
+create index if not exists bg_docs_kind on bg_docs(kind, created_at);
+alter table bg_docs enable row level security;
+-- Older tables from the first prototype (bg_profiles, bg_submissions) are no longer used and can be dropped.
