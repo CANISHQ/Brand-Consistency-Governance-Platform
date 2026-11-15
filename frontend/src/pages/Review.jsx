@@ -251,18 +251,19 @@ export default function Review() {
     : blocking.length ? `${blocking.length} mandatory ${blocking.length > 1 ? "issues need" : "issue needs"} a decision (accept, edit or reject with a reason).`
     : "";
 
-  function submit() {
+  async function submit() {
     const outFindings = [...resolved.map((f) => ({ ...f, status: "accepted" })), ...findings].map(lightFinding);
     const at = new Date().toISOString();
     const imgLight = image ? { name: image.name, alt: image.alt, fonts: image.fonts, textInImage: image.textInImage } : null;
     if (editing) {
-      dispatch({ type: "resubmit", id: editing.id, fields: { title: meta.title, type: meta.type, audience: meta.audience, purpose: meta.purpose, image: imgLight }, content, findings: outFindings, by: me.name, note: note.trim() || "Revised after review" });
-      if (note.trim()) dispatch({ type: "comment", id: editing.id, by: me.name, role, text: note.trim() });
+      const done = await dispatch({ type: "resubmit", id: editing.id, fields: { title: meta.title, type: meta.type, audience: meta.audience, purpose: meta.purpose, image: imgLight }, content, findings: outFindings, by: me.name, note: note.trim() || "Revised after review" });
+      if (!done) return;
+      if (note.trim() && !state.remote) dispatch({ type: "comment", id: editing.id, by: me.name, role, text: note.trim() });
       dispatch({ type: "edit", id: null });
       navigate(`/approvals?id=${editing.id}`);
     } else {
       const id = `S-${state.nextId}`;
-      dispatch({
+      const done = await dispatch({
         type: "submit",
         submission: {
           title: meta.title.trim(), type: meta.type, audience: meta.audience, purpose: meta.purpose, author: me.name, status: "in_review",
@@ -271,7 +272,8 @@ export default function Review() {
           activity: [{ at, by: me.name, text: "Submitted for review" }],
         },
       });
-      navigate(`/approvals?id=${id}`);
+      if (!done) return;
+      navigate(`/approvals?id=${done.id || id}`);
     }
   }
 

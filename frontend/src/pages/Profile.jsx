@@ -104,9 +104,10 @@ export default function Profile() {
     }));
   }
 
-  function save() {
+  async function save() {
     const summary = summarise(profile, working);
-    dispatch({ type: "profile", profile: working, by: USERS.manager.name, summary });
+    const done = await dispatch({ type: "profile", profile: working, by: USERS.manager.name, summary });
+    if (!done) return;
     setD(clone(working));
     setSaved(`Saved as version ${profile.version + 1}. Existing submissions can now be re-checked against it.`);
     setTimeout(() => setSaved(""), 5000);

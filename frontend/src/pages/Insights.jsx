@@ -175,8 +175,9 @@ function Finder() {
     return { subs, profile: pr };
   }, [term, to, submissions, profile]);
 
-  function flag(s) {
-    dispatch({ type: "comment", id: s.id, by: me.name, role, text: `Flagged for recheck: still contains “${term}”${to.trim() ? `. Suggested replacement: “${to.trim()}”` : ""}.` });
+  async function flag(s) {
+    const ok = await dispatch({ type: "comment", id: s.id, by: me.name, role, text: `Flagged for recheck: still contains “${term}”${to.trim() ? `. Suggested replacement: “${to.trim()}”` : ""}.` });
+    if (!ok) return;
     setFlagged((f) => ({ ...f, [s.id]: true }));
   }
 
@@ -263,10 +264,16 @@ function Impact() {
         next.deprecatedAssets = [...next.deprecatedAssets, asset.trim()];
         summary = `Asset “${asset.trim()}” retired`;
       }
-      dispatch({ type: "profile", profile: next, by: USERS.manager.name, summary });
+      const saved = await dispatch({ type: "profile", profile: next, by: USERS.manager.name, summary });
+      if (!saved) return;
       for (const { s } of affected) {
-        const { findings, added } = await recheck(s, next);
-        dispatch({ type: "recheck", id: s.id, findings, by: USERS.manager.name, text: `Impact scan: re-checked against profile v${version} (${added} new finding${added === 1 ? "" : "s"})` });
+        if (state.remote) {
+          // the server re-runs every check against the saved profile and keeps earlier decisions
+          await dispatch({ type: "recheck", id: s.id, by: USERS.manager.name, text: undefined });
+        } else {
+          const { findings, added } = await recheck(s, next);
+          dispatch({ type: "recheck", id: s.id, findings, by: USERS.manager.name, text: `Impact scan: re-checked against profile v${version} (${added} new finding${added === 1 ? "" : "s"})` });
+        }
       }
       setDone(`Profile saved as version ${version} and ${affected.length} submission${affected.length === 1 ? "" : "s"} re-checked.`);
     } finally {

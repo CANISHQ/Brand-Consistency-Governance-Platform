@@ -418,3 +418,6 @@ ins { color: #6ef0cf; background: rgba(61, 214, 176, 0.14); text-decoration: non
 @media (prefers-reduced-motion: reduce) {
   *, *::before, *::after { animation-duration: 0.01ms !important; transition-duration: 0.01ms !important; }
 }
+
+.api-error{display:flex;gap:12px;align-items:center;justify-content:space-between;margin:12px auto 0;max-width:1180px;padding:10px 14px;border:1px solid #f0b4ae;background:#fff1ef;color:#8a2a20;border-radius:10px;font-size:14px}
+.boot{display:grid;place-items:center;min-height:60vh;color:#5b5f7a}

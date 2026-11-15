@@ -38,3 +38,7 @@ The full request and response contract, finding shape, brand profile and suggest
 ## Data
 
 Submissions, comments and profile changes are stored in the browser (`localStorage`) until the Supabase layer is connected. Replace the reducer in `src/store.jsx` with API calls when the database is ready.
+
+## Connecting to the backend
+
+Build or run with `VITE_API_URL=https://<backend>` (for example `http://localhost:5000`). The app loads all data from `GET /api/bootstrap`, and every submit, decision, comment, profile save and re-check goes through the API. If the server cannot be reached at start-up, the app runs on its built-in engine and localStorage, and the header pill reads "Local rules engine".

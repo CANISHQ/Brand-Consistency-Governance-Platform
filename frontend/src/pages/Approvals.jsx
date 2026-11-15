@@ -40,9 +40,10 @@ function Detail({ s }) {
   const mine = s.author === me.name || role === "manager";
   const canRevise = (s.status === "changes_requested" || s.status === "rejected") && role !== "reviewer" && mine;
 
-  function decide(status) {
+  async function decide(status) {
     const text = comment.trim();
-    dispatch({ type: "decide", id: s.id, status, comment: text, by: me.name, role });
+    const done = await dispatch({ type: "decide", id: s.id, status, comment: text, by: me.name, role, acknowledged: ack });
+    if (!done) return;
     setComment("");
     setAck(false);
   }
@@ -138,7 +139,7 @@ function Detail({ s }) {
           ))}
           <div className="comment-form">
             <textarea className="input" rows={2} value={comment} onChange={(e) => setComment(e.target.value)} placeholder="Add a comment" aria-label="Add a comment" />
-            <button className="btn sm" disabled={!comment.trim()} onClick={() => { dispatch({ type: "comment", id: s.id, by: me.name, role, text: comment.trim() }); setComment(""); }}>Post comment</button>
+            <button className="btn sm" disabled={!comment.trim()} onClick={async () => { if (await dispatch({ type: "comment", id: s.id, by: me.name, role, text: comment.trim() })) setComment(""); }}>Post comment</button>
           </div>
         </div>
       )}

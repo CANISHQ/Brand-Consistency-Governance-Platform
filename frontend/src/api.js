@@ -7,15 +7,28 @@ const BASE = ((typeof import.meta !== "undefined" && import.meta.env && import.m
 
 export const API_CONFIGURED = !!BASE;
 
-async function post(path, body) {
-  const res = await fetch(`${BASE}${path}`, {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify(body),
-  });
-  if (!res.ok) throw new Error(`HTTP ${res.status}`);
-  return res.json();
+// Who is acting. The backend enforces permissions from these headers (demo auth) or from a Supabase token.
+let actor = { role: "creator", name: "" };
+export function setActor(a) { actor = a; }
+
+export class ApiError extends Error {
+  constructor(status, message, data) { super(message); this.status = status; this.data = data; }
 }
+
+// Any request. Throws ApiError on HTTP errors (with the server's message) and a plain Error when unreachable.
+export async function apiFetch(method, path, body) {
+  const res = await fetch(`${BASE}${path}`, {
+    method,
+    headers: { "Content-Type": "application/json", "X-User-Role": actor.role, "X-User-Name": actor.name },
+    body: body === undefined ? undefined : JSON.stringify(body),
+  });
+  let data = null;
+  try { data = await res.json(); } catch { /* empty body */ }
+  if (!res.ok) throw new ApiError(res.status, (data && data.error) || `HTTP ${res.status}`, data);
+  return data;
+}
+
+const post = (path, body) => apiFetch("POST", path, body);
 
 // POST /api/review  { content, meta, image, profile } -> { findings: Finding[] }
 export async function review(payload) {

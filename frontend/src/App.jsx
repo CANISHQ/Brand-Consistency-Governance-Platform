@@ -8,7 +8,6 @@ import Responsible from "./pages/Responsible.jsx";
 import Icon from "./components/Icon.jsx";
 import { useStore } from "./store.jsx";
 import { USERS } from "./engine/seed.js";
-import { API_CONFIGURED } from "./api.js";
 import { navigate } from "./util.js";
 
 const NAV = [
@@ -48,8 +47,8 @@ function Shell({ route, children }) {
           ))}
         </nav>
         <div className="top-right">
-          <span className={API_CONFIGURED ? "pill pill-ok" : "pill pill-muted"} title={API_CONFIGURED ? "Using the Flask API, falling back to local rules if it is unreachable" : "Running on the built-in rule engine"}>
-            {API_CONFIGURED ? "API connected" : "Local rules engine"}
+          <span className={state.remote ? "pill pill-ok" : "pill pill-muted"} title={state.remote ? "Connected to the Flask API: data is shared and checks run on the server" : "Running on the built-in rule engine in this browser"}>
+            {state.remote ? "API connected" : "Local rules engine"}
           </span>
           <label className="role-pick">
             <span className="sr">Acting as</span>
@@ -61,6 +60,12 @@ function Shell({ route, children }) {
           </label>
         </div>
       </header>
+      {state.apiError && (
+        <div className="api-error" role="alert">
+          <span>{state.apiError}</span>
+          <button className="link-btn" onClick={() => dispatch({ type: "error", message: null })}>Dismiss</button>
+        </div>
+      )}
       <main className="main">{children}</main>
       <footer className="foot">
         <span>CodeNova 2026 · Team CodeBlooded · Prototype with sample, non-confidential brand data · <a href="#/responsible">Responsible AI</a></span>
@@ -72,6 +77,8 @@ function Shell({ route, children }) {
 
 export default function App() {
   const route = useRoute();
+  const { state } = useStore();
+  if (!state.ready) return <div className="boot" role="status">Connecting to the server…</div>;
   if (route === "/" || route === "") return <Landing />;
   const page = { "/review": <Review />, "/approvals": <Approvals />, "/profile": <Profile />, "/insights": <Insights />, "/responsible": <Responsible /> }[route];
   return <Shell route={route}>{page || <Review />}</Shell>;

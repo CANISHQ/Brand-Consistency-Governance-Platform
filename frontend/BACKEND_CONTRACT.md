@@ -2,6 +2,8 @@
 
 What the frontend sends and expects, so the Flask backend (`backend-api`), the AI checks (`ai-checks`) and the database (`database-workflow`) can be built without guessing. The built-in rules engine in `src/engine/checker.js` is a working reference implementation of every check below.
 
+> **Implemented.** The Flask server is on branch `backend-api` (see `backend/README.md`). Differences from the plan below: `profile` in `/api/review` and `/api/rewrite` is ignored (the server uses its stored profile), actions are the REST endpoints listed in the backend README, and the store (`src/store.jsx`) loads from `GET /api/bootstrap` and sends `X-User-Role` / `X-User-Name` headers.
+
 ## How the frontend talks to the backend
 
 - Set `VITE_API_URL` at build time (for example `https://your-service.onrender.com`).
