@@ -1,0 +1,938 @@
+{
+ "generatedAt": "2026-11-14T19:33:08.274Z",
+ "profile": {
+  "version": 2,
+  "brandName": "Nova",
+  "productName": {
+   "current": "Nova",
+   "former": [
+    "Alpha"
+   ]
+  },
+  "voice": [
+   "warm",
+   "clear",
+   "direct"
+  ],
+  "approvedClaims": [
+   "Built for local businesses",
+   "2,000+ local businesses"
+  ],
+  "palette": [
+   {
+    "name": "Nova Violet",
+    "hex": "#5B4CE0"
+   },
+   {
+    "name": "Ink Navy",
+    "hex": "#12163A"
+   },
+   {
+    "name": "Signal Teal",
+    "hex": "#1FAA8C"
+   },
+   {
+    "name": "Coral",
+    "hex": "#FF6B5E"
+   },
+   {
+    "name": "Cloud",
+    "hex": "#F3F1FD"
+   }
+  ],
+  "fonts": [
+   "Inter",
+   "Playfair Display"
+  ],
+  "approvedAssets": [
+   "Logo-Primary-2026.svg"
+  ],
+  "deprecatedAssets": [
+   "Logo-Primary-2023",
+   "logo-old",
+   "Alpha-Logo"
+  ],
+  "imageRules": {
+   "logo": "mandatory",
+   "alt": "mandatory",
+   "fonts": "mandatory",
+   "palette": "flexible"
+  },
+  "rules": [
+   {
+    "id": "T-NAME",
+    "kind": "term",
+    "strictness": "mandatory",
+    "since": 2,
+    "label": "Outdated product name",
+    "category": "Terminology",
+    "caseSensitive": true,
+    "pairs": [
+     [
+      "Alpha",
+      "Nova"
+     ]
+    ],
+    "why": "The product was renamed from Alpha to Nova. The old name must not appear in public content.",
+    "source": {
+     "doc": "Brand Guidelines",
+     "ref": "§2.1 Product naming"
+    }
+   },
+   {
+    "id": "T-CUST",
+    "kind": "term",
+    "strictness": "flexible",
+    "since": 1,
+    "label": "Preferred term",
+    "category": "Terminology",
+    "pairs": [
+     [
+      "users",
+      "customers"
+     ],
+     [
+      "user",
+      "customer"
+     ]
+    ],
+    "why": "Brand Guidelines call the people we serve “customers”.",
+    "source": {
+     "doc": "Brand Guidelines",
+     "ref": "§3.2 Preferred terms"
+    }
+   },
+   {
+    "id": "T-SALES",
+    "kind": "term",
+    "strictness": "flexible",
+    "since": 1,
+    "label": "Preferred term",
+    "category": "Terminology",
+    "pairs": [
+     [
+      "customers",
+      "clients"
+     ],
+     [
+      "customer",
+      "client"
+     ]
+    ],
+    "why": "The Sales Playbook calls the people we serve “clients”.",
+    "source": {
+     "doc": "Sales Playbook 2025",
+     "ref": "§4 Language"
+    }
+   },
+   {
+    "id": "C-FAST",
+    "kind": "claim",
+    "strictness": "mandatory",
+    "since": 1,
+    "label": "Claim needs a source",
+    "category": "Facts & claims",
+    "patterns": [
+     {
+      "src": "\\b(?:the\\s+)?fastest\\s+(?:service|platform|tool)(?:\\s+in\\s+the\\s+(?:country|world|industry|market))?",
+      "flags": "i",
+      "replacement": "a fast service designed for local businesses"
+     }
+    ],
+    "why": "The approved fact sheet and linked study do not support this comparison.",
+    "source": {
+     "doc": "Approved Fact Sheet",
+     "ref": "Approved claims"
+    }
+   },
+   {
+    "id": "C-BEST",
+    "kind": "claim",
+    "strictness": "mandatory",
+    "since": 1,
+    "label": "Claim needs a source",
+    "category": "Facts & claims",
+    "patterns": [
+     {
+      "src": "\\b(?:the\\s+)?(?:best|#1|number[- ]one|leading)\\s+(?:[a-z]+\\s+){0,2}?(?:in\\s+the\\s+(?:country|world|industry|market)|on\\s+the\\s+market)",
+      "flags": "i",
+      "replacement": "built for local businesses"
+     }
+    ],
+    "why": "“Best” and “leading” rankings are not backed by an approved source.",
+    "source": {
+     "doc": "Approved Fact Sheet",
+     "ref": "Approved claims"
+    }
+   },
+   {
+    "id": "C-GUAR",
+    "kind": "claim",
+    "strictness": "mandatory",
+    "since": 1,
+    "label": "Claim needs a source",
+    "category": "Facts & claims",
+    "patterns": [
+     {
+      "src": "\\bguaranteed\\s+(?:results?|success|growth)\\b",
+      "flags": "i",
+      "replacement": "results you can track"
+     }
+    ],
+    "why": "Guarantees are not part of the approved claims.",
+    "source": {
+     "doc": "Approved Fact Sheet",
+     "ref": "Approved claims"
+    }
+   },
+   {
+    "id": "C-SECURE",
+    "kind": "claim",
+    "strictness": "mandatory",
+    "since": 1,
+    "label": "Claim needs a source",
+    "category": "Facts & claims",
+    "patterns": [
+     {
+      "src": "\\b(?:100%\\s+secure|unhackable|completely\\s+secure)\\b",
+      "flags": "i",
+      "replacement": "built with security in mind"
+     }
+    ],
+    "why": "Absolute security claims are not supported by approved evidence.",
+    "source": {
+     "doc": "Approved Fact Sheet",
+     "ref": "Security statements"
+    }
+   },
+   {
+    "id": "C-STAT",
+    "kind": "stat",
+    "strictness": "mandatory",
+    "since": 1,
+    "label": "Unverified statistic",
+    "category": "Facts & claims",
+    "src": "\\b\\d[\\d,]*\\+?\\s+(?:local\\s+)?(?:businesses|customers|clients|teams|brands)\\b",
+    "approved": [
+     "2,000+ local businesses"
+    ],
+    "why": "This figure is not in the approved fact sheet.",
+    "source": {
+     "doc": "Approved Fact Sheet",
+     "ref": "Key figures"
+    }
+   },
+   {
+    "id": "V-FORMAL",
+    "kind": "tone",
+    "strictness": "flexible",
+    "since": 1,
+    "label": "Off-tone wording",
+    "category": "Language & tone",
+    "pairs": [
+     [
+      "utilize",
+      "use"
+     ],
+     [
+      "utilise",
+      "use"
+     ],
+     [
+      "leverage",
+      "use"
+     ],
+     [
+      "facilitate",
+      "help"
+     ],
+     [
+      "in order to",
+      "to"
+     ],
+     [
+      "commence",
+      "start"
+     ],
+     [
+      "endeavour",
+      "try"
+     ],
+     [
+      "purchase",
+      "buy"
+     ],
+     [
+      "assistance",
+      "help"
+     ],
+     [
+      "numerous",
+      "many"
+     ],
+     [
+      "subsequently",
+      "then"
+     ],
+     [
+      "cutting-edge",
+      "modern"
+     ],
+     [
+      "state-of-the-art",
+      "modern"
+     ],
+     [
+      "synergies",
+      "teamwork"
+     ]
+    ],
+    "why": "The brand voice is warm, clear and direct. This wording is more formal than the approved examples.",
+    "source": {
+     "doc": "Voice & Tone Guide",
+     "ref": "Warm · clear · direct"
+    }
+   },
+   {
+    "id": "V-CONTR",
+    "kind": "tone",
+    "rewriteOnly": true,
+    "strictness": "flexible",
+    "since": 1,
+    "label": "Warmer phrasing",
+    "category": "Language & tone",
+    "pairs": [
+     [
+      "do not",
+      "don’t"
+     ],
+     [
+      "cannot",
+      "can’t"
+     ],
+     [
+      "you will",
+      "you’ll"
+     ],
+     [
+      "we are",
+      "we’re"
+     ]
+    ],
+    "why": "Contractions keep the voice warm and direct.",
+    "source": {
+     "doc": "Voice & Tone Guide",
+     "ref": "Warm · clear · direct"
+    }
+   },
+   {
+    "id": "V-EXCL",
+    "kind": "exclaim",
+    "strictness": "flexible",
+    "since": 1,
+    "label": "Too many exclamation marks",
+    "category": "Brand aura",
+    "why": "The brand aura is confident and calm. Keep to one exclamation mark at most.",
+    "source": {
+     "doc": "Voice & Tone Guide",
+     "ref": "Punctuation"
+    }
+   },
+   {
+    "id": "V-CAPS",
+    "kind": "caps",
+    "strictness": "flexible",
+    "since": 1,
+    "label": "All-caps wording",
+    "category": "Access & channel fit",
+    "why": "All-caps words read as shouting and are harder to read with assistive technology.",
+    "source": {
+     "doc": "Accessibility Standards",
+     "ref": "Readable text"
+    }
+   },
+   {
+    "id": "V-LONG",
+    "kind": "long",
+    "strictness": "flexible",
+    "since": 1,
+    "label": "Sentence is too long",
+    "category": "Language & tone",
+    "why": "The brand voice is direct. Sentences over 30 words are hard to follow.",
+    "source": {
+     "doc": "Voice & Tone Guide",
+     "ref": "Short sentences"
+    }
+   },
+   {
+    "id": "A-LINK",
+    "kind": "link",
+    "strictness": "flexible",
+    "since": 1,
+    "label": "Vague link text",
+    "category": "Access & channel fit",
+    "why": "Link text should describe where it goes, so screen-reader users can understand it out of context.",
+    "source": {
+     "doc": "Accessibility Standards",
+     "ref": "Link text"
+    }
+   },
+   {
+    "id": "P-STRUCT",
+    "kind": "structure",
+    "strictness": "flexible",
+    "since": 1,
+    "label": "Content pattern",
+    "category": "Content patterns"
+   }
+  ]
+ },
+ "submissions": [
+  {
+   "id": "S-1001",
+   "title": "Spring launch blog",
+   "type": "blog",
+   "audience": "Small business owners",
+   "purpose": "Announce the spring release",
+   "author": "Priya Shah",
+   "status": "in_review",
+   "createdAt": "2026-11-13T16:33:08.260Z",
+   "updatedAt": "2026-11-13T16:33:08.260Z",
+   "profileVersion": 2,
+   "versions": [
+    {
+     "n": 1,
+     "content": "Alpha is the fastest service in the country for local businesses. Our users utilize it in order to manage bookings every day. Customers love how quickly they can get set up!\n\nSubscribe to learn more.",
+     "at": "2026-11-13T16:33:08.260Z",
+     "by": "Priya Shah",
+     "note": "First submission"
+    }
+   ],
+   "image": null,
+   "findings": [
+    {
+     "key": "T-NAME|alpha|alpha is the fastest serv",
+     "ruleId": "T-NAME",
+     "label": "Outdated product name",
+     "category": "Terminology",
+     "strictness": "mandatory",
+     "quote": "Alpha",
+     "status": "open"
+    },
+    {
+     "key": "C-FAST|the fastest service in the country|alpha is the fastest service in the country for local businesse",
+     "ruleId": "C-FAST",
+     "label": "Claim needs a source",
+     "category": "Facts & claims",
+     "strictness": "mandatory",
+     "quote": "the fastest service in the country",
+     "status": "open"
+    },
+    {
+     "key": "T-CUST|users|cal businesses. our users utilize it in order",
+     "ruleId": "T-CUST",
+     "label": "Preferred term",
+     "category": "Terminology",
+     "strictness": "flexible",
+     "quote": "users",
+     "status": "open"
+    },
+    {
+     "key": "V-FORMAL|utilize|sinesses. our users utilize it in order to mana",
+     "ruleId": "V-FORMAL",
+     "label": "Off-tone wording",
+     "category": "Language & tone",
+     "strictness": "flexible",
+     "quote": "utilize",
+     "status": "open"
+    },
+    {
+     "key": "V-FORMAL|in order to|ur users utilize it in order to manage bookings eve",
+     "ruleId": "V-FORMAL",
+     "label": "Off-tone wording",
+     "category": "Language & tone",
+     "strictness": "flexible",
+     "quote": "in order to",
+     "status": "open"
+    },
+    {
+     "key": "T-SALES|customers|bookings every day. customers love how quickly th",
+     "ruleId": "T-SALES",
+     "label": "Preferred term",
+     "category": "Terminology",
+     "strictness": "flexible",
+     "quote": "Customers",
+     "status": "open"
+    },
+    {
+     "key": "P-STRUCT|missing call to action",
+     "ruleId": "P-STRUCT",
+     "label": "Missing call to action",
+     "category": "Content patterns",
+     "strictness": "flexible",
+     "quote": "(whole draft)",
+     "status": "open"
+    }
+   ],
+   "comments": [
+    {
+     "id": "S-1001-c0",
+     "by": "Priya Shah",
+     "role": "creator",
+     "text": "First draft for the spring launch.",
+     "at": "2026-11-13T16:33:08.266Z"
+    }
+   ],
+   "activity": [
+    {
+     "at": "2026-11-13T16:33:08.260Z",
+     "by": "Priya Shah",
+     "text": "Submitted for review"
+    }
+   ]
+  },
+  {
+   "id": "S-1002",
+   "title": "Instagram: holiday offer",
+   "type": "social",
+   "audience": "Local shop owners",
+   "purpose": "Promote the holiday offer",
+   "author": "Rahul Verma",
+   "status": "changes_requested",
+   "createdAt": "2026-11-12T14:33:08.266Z",
+   "updatedAt": "2026-11-12T23:33:08.266Z",
+   "profileVersion": 2,
+   "versions": [
+    {
+     "n": 1,
+     "content": "HOLIDAY OFFER! Nova is the best platform on the market!! #holiday #nova",
+     "at": "2026-11-12T14:33:08.266Z",
+     "by": "Rahul Verma",
+     "note": "First submission"
+    }
+   ],
+   "image": {
+    "name": "holiday-post-Logo-Primary-2023.png",
+    "alt": "",
+    "fonts": "Comic Sans, Inter",
+    "textInImage": ""
+   },
+   "findings": [
+    {
+     "key": "V-CAPS|holiday|holiday offer! nova is the ",
+     "ruleId": "V-CAPS",
+     "label": "All-caps wording",
+     "category": "Access & channel fit",
+     "strictness": "flexible",
+     "quote": "HOLIDAY",
+     "status": "open"
+    },
+    {
+     "key": "V-CAPS|offer|holiday offer! nova is the best p",
+     "ruleId": "V-CAPS",
+     "label": "All-caps wording",
+     "category": "Access & channel fit",
+     "strictness": "flexible",
+     "quote": "OFFER",
+     "status": "open"
+    },
+    {
+     "key": "C-BEST|the best platform on the market|iday offer! nova is the best platform on the market!! #holiday #nova",
+     "ruleId": "C-BEST",
+     "label": "Claim needs a source",
+     "category": "Facts & claims",
+     "strictness": "mandatory",
+     "quote": "the best platform on the market",
+     "status": "open"
+    },
+    {
+     "ruleId": "IMG-LOGO",
+     "label": "Old logo",
+     "category": "Visual identity",
+     "strictness": "mandatory",
+     "quote": "holiday-post-Logo-Primary-2023.png",
+     "status": "open"
+    },
+    {
+     "ruleId": "IMG-ALT",
+     "label": "Missing alt text",
+     "category": "Access & channel fit",
+     "strictness": "mandatory",
+     "quote": "(image)",
+     "status": "open"
+    },
+    {
+     "ruleId": "IMG-FONT",
+     "label": "Unapproved font",
+     "category": "Visual identity",
+     "strictness": "mandatory",
+     "quote": "Comic Sans",
+     "status": "open"
+    }
+   ],
+   "comments": [
+    {
+     "id": "S-1002-c0",
+     "by": "Rahul Verma",
+     "role": "creator",
+     "text": "Holiday creative attached.",
+     "at": "2026-11-12T14:33:08.266Z"
+    },
+    {
+     "id": "S-1002-c1",
+     "by": "Rohan Mehta",
+     "role": "reviewer",
+     "text": "The creative uses the old logo and an unapproved font. Please replace both and add alt text.",
+     "at": "2026-11-12T23:33:08.266Z"
+    }
+   ],
+   "activity": [
+    {
+     "at": "2026-11-12T14:33:08.266Z",
+     "by": "Rahul Verma",
+     "text": "Submitted for review"
+    },
+    {
+     "at": "2026-11-12T23:33:08.266Z",
+     "by": "Rohan Mehta",
+     "text": "Requested changes"
+    }
+   ]
+  },
+  {
+   "id": "S-1003",
+   "title": "Email: onboarding series",
+   "type": "email",
+   "audience": "New customers",
+   "purpose": "Welcome and activation",
+   "author": "Meera Iyer",
+   "status": "approved",
+   "createdAt": "2026-11-08T17:33:08.266Z",
+   "updatedAt": "2026-11-09T15:33:08.266Z",
+   "profileVersion": 1,
+   "versions": [
+    {
+     "n": 1,
+     "content": "Subject: Welcome aboard\n\nHi there,\n\nThanks for joining Alpha. We cannot wait to help you get started, and our team will provide assistance whenever you need it.",
+     "at": "2026-11-08T17:33:08.266Z",
+     "by": "Meera Iyer",
+     "note": "First submission"
+    },
+    {
+     "n": 2,
+     "content": "Subject: Welcome aboard\n\nHi there,\n\nThanks for joining Alpha. We can’t wait to help you get started, and our team will help whenever you need it.",
+     "at": "2026-11-09T15:33:08.266Z",
+     "by": "Meera Iyer",
+     "note": "Applied review suggestions"
+    }
+   ],
+   "image": null,
+   "findings": [
+    {
+     "key": "V-FORMAL|assistance|r team will provide assistance whenever you need i",
+     "ruleId": "V-FORMAL",
+     "label": "Off-tone wording",
+     "category": "Language & tone",
+     "strictness": "flexible",
+     "quote": "assistance",
+     "status": "accepted"
+    }
+   ],
+   "comments": [
+    {
+     "id": "S-1003-c0",
+     "by": "Rohan Mehta",
+     "role": "reviewer",
+     "text": "Approved. Tone is warm and clear.",
+     "at": "2026-11-09T15:33:08.266Z"
+    }
+   ],
+   "activity": [
+    {
+     "at": "2026-11-08T17:33:08.266Z",
+     "by": "Meera Iyer",
+     "text": "Submitted for review"
+    },
+    {
+     "at": "2026-11-09T15:33:08.266Z",
+     "by": "Rohan Mehta",
+     "text": "Approved the content"
+    }
+   ]
+  },
+  {
+   "id": "S-1004",
+   "title": "Search ad: bookings",
+   "type": "ad",
+   "audience": "Salon and cafe owners",
+   "purpose": "Drive clicks to the landing page",
+   "author": "Dev Patel",
+   "status": "in_review",
+   "createdAt": "2026-11-14T13:33:08.266Z",
+   "updatedAt": "2026-11-14T13:33:08.266Z",
+   "profileVersion": 2,
+   "versions": [
+    {
+     "n": 1,
+     "content": "Nova: the leading booking tool in the country. Leverage state-of-the-art scheduling for your shop.",
+     "at": "2026-11-14T13:33:08.266Z",
+     "by": "Dev Patel",
+     "note": "First submission"
+    }
+   ],
+   "image": null,
+   "findings": [
+    {
+     "key": "C-BEST|the leading booking tool in the country|nova: the leading booking tool in the country. leverage state-of-",
+     "ruleId": "C-BEST",
+     "label": "Claim needs a source",
+     "category": "Facts & claims",
+     "strictness": "mandatory",
+     "quote": "the leading booking tool in the country",
+     "status": "open"
+    },
+    {
+     "key": "V-FORMAL|leverage|ool in the country. leverage state-of-the-art sc",
+     "ruleId": "V-FORMAL",
+     "label": "Off-tone wording",
+     "category": "Language & tone",
+     "strictness": "flexible",
+     "quote": "Leverage",
+     "status": "open"
+    },
+    {
+     "key": "V-FORMAL|state-of-the-art|e country. leverage state-of-the-art scheduling for your",
+     "ruleId": "V-FORMAL",
+     "label": "Off-tone wording",
+     "category": "Language & tone",
+     "strictness": "flexible",
+     "quote": "state-of-the-art",
+     "status": "open"
+    },
+    {
+     "key": "P-STRUCT|missing call to action",
+     "ruleId": "P-STRUCT",
+     "label": "Missing call to action",
+     "category": "Content patterns",
+     "strictness": "flexible",
+     "quote": "(whole draft)",
+     "status": "open"
+    }
+   ],
+   "comments": [
+    {
+     "id": "S-1004-c0",
+     "by": "Dev Patel",
+     "role": "creator",
+     "text": "Ad copy for the local-SEO campaign.",
+     "at": "2026-11-14T13:33:08.266Z"
+    }
+   ],
+   "activity": [
+    {
+     "at": "2026-11-14T13:33:08.266Z",
+     "by": "Dev Patel",
+     "text": "Submitted for review"
+    }
+   ]
+  },
+  {
+   "id": "S-1005",
+   "title": "Blog: five scheduling tips",
+   "type": "blog",
+   "audience": "Small business owners",
+   "purpose": "Educate and drive sign-ups",
+   "author": "Priya Shah",
+   "status": "approved",
+   "createdAt": "2026-11-05T18:33:08.266Z",
+   "updatedAt": "2026-11-06T17:33:08.266Z",
+   "profileVersion": 1,
+   "versions": [
+    {
+     "n": 1,
+     "content": "Scheduling should feel simple. Here are five tips that numerous Alpha shop owners use to cut no-shows.\n\nStart with Nova today.",
+     "at": "2026-11-05T18:33:08.266Z",
+     "by": "Priya Shah",
+     "note": "First submission"
+    },
+    {
+     "n": 2,
+     "content": "Scheduling should feel simple. Here are five tips that many Alpha shop owners use to cut no-shows.\n\nStart with Nova today.",
+     "at": "2026-11-06T17:33:08.266Z",
+     "by": "Priya Shah",
+     "note": "Applied review suggestions"
+    }
+   ],
+   "image": null,
+   "findings": [
+    {
+     "key": "V-FORMAL|numerous| are five tips that numerous alpha shop owners u",
+     "ruleId": "V-FORMAL",
+     "label": "Off-tone wording",
+     "category": "Language & tone",
+     "strictness": "flexible",
+     "quote": "numerous",
+     "status": "accepted"
+    }
+   ],
+   "comments": [
+    {
+     "id": "S-1005-c0",
+     "by": "Rohan Mehta",
+     "role": "reviewer",
+     "text": "Approved with the tone fixes applied.",
+     "at": "2026-11-06T17:33:08.266Z"
+    }
+   ],
+   "activity": [
+    {
+     "at": "2026-11-05T18:33:08.266Z",
+     "by": "Priya Shah",
+     "text": "Submitted for review"
+    },
+    {
+     "at": "2026-11-06T17:33:08.266Z",
+     "by": "Rohan Mehta",
+     "text": "Approved the content"
+    }
+   ]
+  },
+  {
+   "id": "S-1006",
+   "title": "LinkedIn: founder story",
+   "type": "social",
+   "audience": "Partners",
+   "purpose": "Thought leadership",
+   "author": "Rahul Verma",
+   "status": "rejected",
+   "createdAt": "2026-11-03T17:33:08.266Z",
+   "updatedAt": "2026-11-04T16:33:08.266Z",
+   "profileVersion": 1,
+   "versions": [
+    {
+     "n": 1,
+     "content": "Over 15,000 clients trust our platform. We leverage cutting-edge technology to facilitate growth! Learn more here: click here",
+     "at": "2026-11-03T17:33:08.266Z",
+     "by": "Rahul Verma",
+     "note": "First submission"
+    }
+   ],
+   "image": {
+    "name": "founder-banner.png",
+    "alt": "",
+    "fonts": "Impact",
+    "textInImage": ""
+   },
+   "findings": [
+    {
+     "key": "C-STAT|15,000 clients|over 15,000 clients trust our platform.",
+     "ruleId": "C-STAT",
+     "label": "Unverified statistic",
+     "category": "Facts & claims",
+     "strictness": "mandatory",
+     "quote": "15,000 clients",
+     "status": "open"
+    },
+    {
+     "key": "V-FORMAL|leverage|st our platform. we leverage cutting-edge techno",
+     "ruleId": "V-FORMAL",
+     "label": "Off-tone wording",
+     "category": "Language & tone",
+     "strictness": "flexible",
+     "quote": "leverage",
+     "status": "rejected",
+     "note": "Keeps the tone of the original announcement."
+    },
+    {
+     "key": "V-FORMAL|cutting-edge|atform. we leverage cutting-edge technology to facil",
+     "ruleId": "V-FORMAL",
+     "label": "Off-tone wording",
+     "category": "Language & tone",
+     "strictness": "flexible",
+     "quote": "cutting-edge",
+     "status": "rejected",
+     "note": "Keeps the tone of the original announcement."
+    },
+    {
+     "key": "V-FORMAL|facilitate|-edge technology to facilitate growth! learn more ",
+     "ruleId": "V-FORMAL",
+     "label": "Off-tone wording",
+     "category": "Language & tone",
+     "strictness": "flexible",
+     "quote": "facilitate",
+     "status": "rejected",
+     "note": "Keeps the tone of the original announcement."
+    },
+    {
+     "key": "A-LINK|learn more here| facilitate growth! learn more here: click here",
+     "ruleId": "A-LINK",
+     "label": "Vague link text",
+     "category": "Access & channel fit",
+     "strictness": "flexible",
+     "quote": "Learn more here",
+     "status": "open"
+    },
+    {
+     "key": "A-LINK|click here|h! learn more here: click here",
+     "ruleId": "A-LINK",
+     "label": "Vague link text",
+     "category": "Access & channel fit",
+     "strictness": "flexible",
+     "quote": "click here",
+     "status": "open"
+    },
+    {
+     "ruleId": "IMG-FONT",
+     "label": "Unapproved font",
+     "category": "Visual identity",
+     "strictness": "mandatory",
+     "quote": "Impact",
+     "status": "open"
+    },
+    {
+     "ruleId": "IMG-ALT",
+     "label": "Missing alt text",
+     "category": "Access & channel fit",
+     "strictness": "mandatory",
+     "quote": "(image)",
+     "status": "open"
+    }
+   ],
+   "comments": [
+    {
+     "id": "S-1006-c0",
+     "by": "Rohan Mehta",
+     "role": "reviewer",
+     "text": "The reach figure is unverified. Please resubmit with an approved statistic.",
+     "at": "2026-11-04T16:33:08.266Z"
+    }
+   ],
+   "activity": [
+    {
+     "at": "2026-11-03T17:33:08.266Z",
+     "by": "Rahul Verma",
+     "text": "Submitted for review"
+    },
+    {
+     "at": "2026-11-04T16:33:08.266Z",
+     "by": "Rohan Mehta",
+     "text": "Rejected the content"
+    }
+   ]
+  }
+ ],
+ "changelog": [
+  {
+   "version": 1,
+   "at": "2026-10-15T19:33:08.274Z",
+   "by": "Anika Rao",
+   "summary": "Initial brand profile created"
+  },
+  {
+   "version": 2,
+   "at": "2026-11-12T19:33:08.274Z",
+   "by": "Anika Rao",
+   "summary": "Product renamed Alpha → Nova; old name is now a mandatory rule"
+  }
+ ]
+}
