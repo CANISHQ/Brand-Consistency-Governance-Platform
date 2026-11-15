@@ -25,7 +25,9 @@ class Config:
         self.gemini_style = e("GEMINI_API_STYLE", "generate_content").lower()
         self.gemini_timeout = float(e("GEMINI_TIMEOUT", "20"))
         self.allowed_origins = [o.strip() for o in e("ALLOWED_ORIGINS", "http://localhost:5173,http://localhost:3000").split(",") if o.strip()]
-        self.allow_reset = _b("ALLOW_RESET", "1")
+        self.allow_reset = _b("ALLOW_RESET", "0")
+        self.demo_data = _b("ALLOW_DEMO_DATA", "1")
         self.max_content_chars = 50_000
+        self.max_asset_bytes = 1_500_000
         for k, v in over.items():
             setattr(self, k, v)

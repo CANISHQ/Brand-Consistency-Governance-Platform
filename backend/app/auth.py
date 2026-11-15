@@ -1,17 +1,31 @@
+"""Identity and permissions.
+
+PROTOTYPE IDENTITY: in AUTH_MODE=demo the browser sends the identity the person typed on the welcome screen
+(X-User-Id / Name / Designation / Role, URL-encoded). This is NOT secure authentication: anyone can claim any role.
+AUTH_MODE=jwt requires a Supabase access token and reads the role from app_metadata.brand_role.
+"""
+import re
 from functools import wraps
+from urllib.parse import unquote
 
 import jwt
-from werkzeug.exceptions import HTTPException
 from flask import current_app, g, jsonify, request
+from werkzeug.exceptions import HTTPException
 
-ROLES = ("creator", "reviewer", "manager")
-DEMO_USERS = {"manager": "Anika Rao", "creator": "Priya Shah", "reviewer": "Rohan Mehta"}
+ROLES = ("creator", "reviewer", "owner")
 
 
 class ApiError(Exception):
     def __init__(self, status, message, **extra):
         super().__init__(message)
         self.status, self.message, self.extra = status, message, extra
+
+
+def _clean(v, lo, hi, what):
+    v = re.sub(r"\s+", " ", unquote(v or "")).strip()
+    if not (lo <= len(v) <= hi):
+        raise ApiError(401, f"Your {what} is missing or invalid. Complete the welcome screen first.")
+    return v
 
 
 def current_user():
@@ -24,17 +38,20 @@ def current_user():
             claims = jwt.decode(h[7:], cfg.jwt_secret, algorithms=["HS256"], audience="authenticated")
         except jwt.PyJWTError:
             raise ApiError(401, "Invalid or expired token")
-        role = (claims.get("app_metadata") or {}).get("brand_role", "creator")
+        role = (claims.get("app_metadata") or {}).get("brand_role")
         meta = claims.get("user_metadata") or {}
-        name = meta.get("full_name") or meta.get("name") or claims.get("email") or "User"
         if role not in ROLES:
-            role = "creator"
-        return {"id": claims.get("sub"), "role": role, "name": name}
-    # demo mode: trusts headers. For a hackathon demo only, never for production.
-    role = request.headers.get("X-User-Role", "creator").lower()
+            raise ApiError(403, "Your account has no brand role assigned")
+        return {"id": claims.get("sub"), "role": role, "name": meta.get("full_name") or meta.get("name") or claims.get("email"),
+                "designation": meta.get("designation", "")}
+    role = unquote(request.headers.get("X-User-Role", "")).lower()
     if role not in ROLES:
-        raise ApiError(400, f"Unknown role “{role}”")
-    return {"id": None, "role": role, "name": request.headers.get("X-User-Name") or DEMO_USERS[role]}
+        raise ApiError(401, "Choose a role on the welcome screen first.")
+    uid = unquote(request.headers.get("X-User-Id", ""))
+    if not re.fullmatch(r"[A-Za-z0-9_-]{8,64}", uid):
+        raise ApiError(401, "Your identity is missing. Complete the welcome screen first.")
+    return {"id": uid, "role": role, "name": _clean(request.headers.get("X-User-Name"), 2, 80, "name"),
+            "designation": _clean(request.headers.get("X-User-Designation"), 2, 80, "designation")}
 
 
 def require(*roles):
@@ -54,20 +71,8 @@ def register_error_handlers(app):
     def _api(e):
         return jsonify({"error": e.message, **e.extra}), e.status
 
-    @app.errorhandler(404)
-    def _404(e):
-        return jsonify({"error": "Not found"}), 404
-
-    @app.errorhandler(405)
-    def _405(e):
-        return jsonify({"error": "Method not allowed"}), 405
-
-    @app.errorhandler(413)
-    def _413(e):
-        return jsonify({"error": "Request too large"}), 413
-
     @app.errorhandler(Exception)
-    def _500(e):
+    def _any(e):
         if isinstance(e, HTTPException):
             return jsonify({"error": e.description}), e.code
         current_app.logger.exception("Unhandled error")
