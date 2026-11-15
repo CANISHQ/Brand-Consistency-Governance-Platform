@@ -1,30 +1,20 @@
+import base64
 import time
 from collections import defaultdict, deque
 
-from flask import Blueprint, current_app, g, jsonify, request
+from flask import Blueprint, Response, current_app, g, jsonify, request
 
 from .ai.gemini import Gemini
-from .auth import ApiError, current_user, require
-from .engine.checker import review_all, rewrite_content
-from .seed import load_seed
-from .services import profile as profile_svc
-from .services import workflow
+from .auth import ApiError, require
+from .engine import review as engine
+from .services import assets, assistant, demo, insights, suggestions, workflow
+from .services import brands as B
 
 bp = Blueprint("api", __name__, url_prefix="/api")
 _hits = defaultdict(deque)
-TYPES = ("blog", "social", "ad", "email", "document")
-
-
-def store():
-    return current_app.config["STORE"]
-
-
-def cfg():
-    return current_app.config["CFG"]
-
-
-def ai() -> Gemini:
-    return current_app.config["AI"]
+store = lambda: current_app.config["STORE"]  # noqa: E731
+cfg = lambda: current_app.config["CFG"]  # noqa: E731
+ai = lambda: current_app.config["AI"]  # noqa: E731
 
 
 def body():
@@ -44,36 +34,13 @@ def throttle(limit=60, window=60):
     q.append(t)
 
 
-def clean_meta(d):
-    m = d.get("meta") or {}
-    if not isinstance(m, dict) or m.get("type") not in TYPES:
-        raise ApiError(422, "meta.type must be one of " + ", ".join(TYPES))
-    return {"type": m["type"], "audience": str(m.get("audience") or "")[:300], "purpose": str(m.get("purpose") or "")[:300]}
+def with_products(b):
+    return {**b, "products": B.list_products(store(), b["id"])}
 
 
-def clean_content(d):
-    c = d.get("content")
-    if not isinstance(c, str):
-        raise ApiError(422, "content must be a string")
-    if len(c) > cfg().max_content_chars:
-        raise ApiError(413, "Content is too long")
-    return c
-
-
-def clean_image(d):
-    img = d.get("image")
-    if not img:
-        return None
-    if not isinstance(img, dict):
-        raise ApiError(422, "image must be an object")
-    out = {k: str(img.get(k) or "")[:2000] for k in ("name", "alt", "fonts", "textInImage")}
-    a = img.get("analysis")
-    if isinstance(a, dict):
-        off = [c for c in (a.get("offPalette") or [])[:6] if isinstance(c, dict) and isinstance(c.get("nearest"), dict)
-               and isinstance(c.get("hex"), str) and isinstance(c.get("share"), (int, float))]
-        lowc = a.get("lowContrast") if isinstance(a.get("lowContrast"), dict) and isinstance(a["lowContrast"].get("ratio"), (int, float)) else None
-        out["analysis"] = {"offPalette": off, "lowContrast": lowc}
-    return out
+def _ctx_for(d):
+    ctx = B.build_context(store(), *workflow.scope_from(d))
+    return ctx
 
 
 @bp.get("/health")
@@ -85,25 +52,134 @@ def health():
 @require()
 def bootstrap():
     s = store()
-    return jsonify({"profile": s.get_profile(), "changelog": s.get_changelog(), "submissions": s.list_submissions(),
-                    "user": g.user, "ai": {"enabled": ai().enabled, "model": cfg().gemini_model if ai().enabled else None},
-                    "config": {"auth": cfg().auth_mode, "store": cfg().store}})
+    return jsonify({"user": g.user, "brands": [with_products(b) for b in B.list_brands(s)], "submissions": workflow.visible(s, g.user),
+                    "suggestions": suggestions.visible(s, g.user), "ai": {"enabled": ai().enabled}, "config": {"auth": cfg().auth_mode, "store": cfg().store, "demo": cfg().demo_data}})
 
 
+# ----- brands & products -----
+@bp.get("/brands")
+@require()
+def brands():
+    return jsonify({"brands": [with_products(b) for b in B.list_brands(store())]})
+
+
+@bp.post("/brands")
+@require("owner")
+def create_brand():
+    return jsonify({"brand": with_products(B.save_brand(store(), g.user, body()))}), 201
+
+
+@bp.get("/brands/<bid>")
+@require()
+def get_brand(bid):
+    return jsonify({"brand": with_products(B.get_brand(store(), bid))})
+
+
+@bp.put("/brands/<bid>")
+@require("owner")
+def put_brand(bid):
+    return jsonify({"brand": with_products(B.save_brand(store(), g.user, body(), bid))})
+
+
+@bp.get("/brands/<bid>/versions")
+@require()
+def brand_versions(bid):
+    B.get_brand(store(), bid)
+    return jsonify({"versions": [{k: v[k] for k in ("version", "updatedAt", "updatedBy", "changeNote")} for v in B.versions(store(), "brand", bid)]})
+
+
+@bp.post("/brands/<bid>/products")
+@require("owner")
+def create_product(bid):
+    return jsonify({"product": B.save_product(store(), g.user, bid, body())}), 201
+
+
+@bp.put("/brands/<bid>/products/<pid>")
+@require("owner")
+def put_product(bid, pid):
+    return jsonify({"product": B.save_product(store(), g.user, bid, body(), pid)})
+
+
+@bp.get("/brands/<bid>/products/<pid>/versions")
+@require()
+def product_versions(bid, pid):
+    B.get_product(store(), pid, bid)
+    return jsonify({"versions": [{k: v[k] for k in ("version", "updatedAt", "updatedBy", "changeNote")} for v in B.versions(store(), "product", pid)]})
+
+
+# ----- assets -----
+@bp.post("/assets")
+@require("owner")
+def upload_asset():
+    return jsonify(assets.upload(store(), cfg(), g.user, body())), 201
+
+
+@bp.get("/assets/<aid>")
+def get_asset(aid):  # ids are random and unguessable, so <img> tags can load them without headers
+    mime, raw, name = assets.fetch(store(), aid)
+    r = Response(raw, mimetype=mime)
+    r.headers["Content-Security-Policy"] = "default-src 'none'; style-src 'unsafe-inline'; sandbox"
+    r.headers["Cache-Control"] = "private, max-age=3600"
+    r.headers["Content-Disposition"] = "inline"
+    return r
+
+
+# ----- fact-sheet assistant -----
+@bp.get("/assistant/questions")
+@require("owner")
+def assistant_questions():
+    return jsonify({"questions": assistant.questions(request.args.get("scope", "brand"))})
+
+
+@bp.post("/assistant/factsheet")
+@require("owner")
+def assistant_draft():
+    throttle(20)
+    d = body()
+    return jsonify(assistant.make_draft(ai(), d.get("scope"), B.s(d.get("name"), 100), d.get("answers"), d.get("documentText")))
+
+
+# ----- suggestions -----
+@bp.get("/suggestions")
+@require()
+def list_suggestions():
+    return jsonify({"suggestions": suggestions.visible(store(), g.user)})
+
+
+@bp.post("/suggestions")
+@require("creator", "reviewer")
+def create_suggestion():
+    return jsonify({"suggestion": suggestions.create(store(), g.user, body())}), 201
+
+
+@bp.post("/suggestions/<sid>/resolve")
+@require("owner")
+def resolve_suggestion(sid):
+    return jsonify({"suggestion": suggestions.resolve(store(), g.user, sid, body())})
+
+
+# ----- review -----
 @bp.post("/review")
 @require()
 def review():
     throttle()
     d = body()
-    content, meta, image = clean_content(d), clean_meta(d), clean_image(d)
-    profile = store().get_profile()  # the server's own profile is the source of truth, never the one in the request
-    findings = review_all(content, meta, image, profile)
-    ai_used = False
-    extra = ai().suggest(content, meta, profile, findings) if ai().enabled else []
-    if extra:
-        ai_used = True
-        findings = sorted(findings + extra, key=lambda f: (0 if f["strictness"] == "mandatory" else 1, f.get("start", 10 ** 9)))
-    return jsonify({"findings": findings, "engine": "rules+ai" if ai_used else "rules", "profileVersion": profile["version"]})
+    content = d.get("content")
+    workflow.check_content(cfg(), content)
+    meta, image = workflow.clean_meta(d), workflow.clean_image(d.get("image"))
+    ctx = _ctx_for(d)
+    findings = engine.review(content, meta, image, ctx)
+    used_ai, notice = False, None
+    if not ctx["hasApproved"]:
+        notice = (f"{ctx['brand']['name']}{' / ' + ctx['product']['name'] if ctx['product'] else ''} has no approved facts, claims or rules yet, so no brand-specific "
+                  "checks were run. Ask the Owner to add and approve them.")
+    elif ai().enabled:
+        extra = ai().suggest(content, meta, ctx, findings)
+        if extra:
+            used_ai = True
+            findings = sorted(findings + extra, key=lambda f: (-engine.SEV_RANK[f["severity"]], f.get("start", 10 ** 9)))
+    return jsonify({"findings": findings, "context": {"brand": ctx["brand"], "product": ctx["product"]}, "notice": notice,
+                    "engine": "rules+ai" if used_ai else "rules"})
 
 
 @bp.post("/rewrite")
@@ -111,92 +187,71 @@ def review():
 def rewrite():
     throttle()
     d = body()
-    content, meta = clean_content(d), clean_meta(d)
-    dismissed = {k for k in (d.get("dismissed") or []) if isinstance(k, str)}
-    profile = store().get_profile()
-    res = rewrite_content(content, meta, profile, dismissed)
+    content = d.get("content")
+    workflow.check_content(cfg(), content)
+    meta, ctx = workflow.clean_meta(d), _ctx_for(d)
+    res = engine.rewrite(content, meta, ctx, {k for k in (d.get("dismissed") or []) if isinstance(k, str)})
     res["polished"] = False
-    if ai().enabled:
-        better = ai().polish(res["text"], meta, profile)
+    if ai().enabled and ctx["hasApproved"]:
+        better = ai().polish(res["text"], meta, ctx)
         if better and better != res["text"]:
             res["text"], res["polished"] = better, True
     return jsonify(res)
-
-
-# ----- profile -----
-@bp.get("/profile")
-@require()
-def get_profile():
-    return jsonify({"profile": store().get_profile(), "changelog": store().get_changelog()})
-
-
-@bp.put("/profile")
-@require("manager")
-def put_profile():
-    new = profile_svc.save_profile(store(), g.user, body())
-    return jsonify({"profile": new, "changelog": store().get_changelog()})
 
 
 # ----- submissions -----
 @bp.get("/submissions")
 @require()
 def list_submissions():
-    subs = store().list_submissions()
-    st = request.args.get("status")
-    if st:
-        subs = [s for s in subs if s["status"] == st]
-    return jsonify({"submissions": subs})
+    return jsonify({"submissions": workflow.visible(store(), g.user)})
 
 
 @bp.get("/submissions/<sid>")
 @require()
 def get_submission(sid):
-    s = store().get_submission(sid)
-    if not s:
-        raise ApiError(404, "Submission not found")
-    return jsonify({"submission": s})
+    return jsonify({"submission": workflow.get(store(), g.user, sid)})
 
 
 @bp.post("/submissions")
 @require()
 def create_submission():
-    with store().lock:
-        sub = workflow.create_submission(store(), cfg(), g.user, body())
-    return jsonify({"submission": sub}), 201
+    return jsonify({"submission": workflow.create(store(), cfg(), g.user, body())}), 201
 
 
 @bp.post("/submissions/<sid>/versions")
 @require()
 def new_version(sid):
-    with store().lock:
-        return jsonify({"submission": workflow.resubmit(store(), cfg(), g.user, sid, body())})
+    return jsonify({"submission": workflow.resubmit(store(), cfg(), g.user, sid, body())})
 
 
 @bp.post("/submissions/<sid>/decision")
 @require()
 def decision(sid):
-    with store().lock:
-        return jsonify({"submission": workflow.decide(store(), g.user, sid, body())})
+    return jsonify({"submission": workflow.decide(store(), g.user, sid, body())})
 
 
 @bp.post("/submissions/<sid>/comments")
 @require()
 def comment(sid):
-    with store().lock:
-        return jsonify({"submission": workflow.add_comment(store(), g.user, sid, body())}), 201
+    return jsonify({"submission": workflow.comment(store(), g.user, sid, body())}), 201
 
 
 @bp.post("/submissions/<sid>/recheck")
 @require()
 def recheck(sid):
-    with store().lock:
-        return jsonify({"submission": workflow.recheck(store(), g.user, sid, (request.get_json(silent=True) or {}).get("text"))})
+    return jsonify({"submission": workflow.recheck(store(), g.user, sid)})
 
 
-@bp.post("/reset")
-@require("manager")
-def reset():
-    if not cfg().allow_reset:
-        raise ApiError(403, "Reset is disabled")
-    store().reset(*load_seed())
-    return jsonify({"ok": True})
+# ----- insights & demo -----
+@bp.get("/insights")
+@require("reviewer", "owner")
+def get_insights():
+    return jsonify(insights.compute(store().list("submission"), request.args.get("brandId"), request.args.get("productId")))
+
+
+@bp.post("/demo/load")
+@require("owner")
+def load_demo():
+    if not cfg().demo_data:
+        raise ApiError(403, "Demo data is disabled")
+    return jsonify({"brand": with_products(demo.load(store(), g.user))}), 201

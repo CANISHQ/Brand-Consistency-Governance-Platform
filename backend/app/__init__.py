@@ -4,8 +4,6 @@ from .ai.gemini import Gemini
 from .auth import register_error_handlers
 from .config import Config
 from .routes import bp
-from .seed import load_seed
-from .store.base import seed_if_empty
 from .store.sqlite_store import SQLiteStore
 
 
@@ -23,21 +21,17 @@ def create_app(cfg=None, store=None, ai=None):
     cfg = cfg or Config()
     if cfg.auth_mode == "jwt" and not cfg.jwt_secret:
         raise RuntimeError("AUTH_MODE=jwt needs SUPABASE_JWT_SECRET")
-    app.config.update(CFG=cfg, MAX_CONTENT_LENGTH=1_000_000, JSON_SORT_KEYS=False)
-    app.config["STORE"] = store or build_store(cfg)
-    app.config["AI"] = ai or Gemini(cfg)
-    seed_if_empty(app.config["STORE"], load_seed)
+    app.config.update(CFG=cfg, MAX_CONTENT_LENGTH=2_500_000, STORE=store or build_store(cfg), AI=ai or Gemini(cfg))
     register_error_handlers(app)
     app.register_blueprint(bp)
 
     @app.after_request
     def cors(resp):
-        origin = request.headers.get("Origin")
-        allowed = cfg.allowed_origins
+        origin, allowed = request.headers.get("Origin"), cfg.allowed_origins
         if origin and ("*" in allowed or origin in allowed):
             resp.headers["Access-Control-Allow-Origin"] = "*" if "*" in allowed else origin
             resp.headers["Vary"] = "Origin"
-            resp.headers["Access-Control-Allow-Headers"] = "Content-Type, Authorization, X-User-Role, X-User-Name"
+            resp.headers["Access-Control-Allow-Headers"] = "Content-Type, Authorization, X-User-Id, X-User-Role, X-User-Name, X-User-Designation"
             resp.headers["Access-Control-Allow-Methods"] = "GET, POST, PUT, OPTIONS"
             resp.headers["Access-Control-Max-Age"] = "600"
         resp.headers["X-Content-Type-Options"] = "nosniff"
@@ -49,6 +43,6 @@ def create_app(cfg=None, store=None, ai=None):
 
     @app.get("/")
     def root():
-        return {"service": "Brand Consistency and Governance Platform API", "docs": "/api/health"}
+        return {"service": "Brand Consistency and Governance Platform API", "health": "/api/health"}
 
     return app
